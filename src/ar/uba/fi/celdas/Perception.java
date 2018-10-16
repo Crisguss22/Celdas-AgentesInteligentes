@@ -133,4 +133,26 @@ public class Perception {
 		return sb.toString();
 	}
 	
+	public int getAgentY() {
+		for(int i=0;i< level.length; i++){
+        	for(int j=0;j<  level[i].length; j++){
+        		if (level[i][j] == 'A') { 
+        			return i;
+        		};
+        	}
+		}
+		return 0;
+	}
+	
+	public int getAgentX() {
+		for(int i=0;i< level.length; i++){
+        	for(int j=0;j<  level[i].length; j++){
+        		if (level[i][j] == 'A') { 
+        			return j;
+        		};
+        	}
+		}
+		return 0;
+	}
+	
 }

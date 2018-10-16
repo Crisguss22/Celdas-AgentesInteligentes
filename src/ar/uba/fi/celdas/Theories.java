@@ -35,6 +35,10 @@ public class Theories {
 		return this.existenceSet.contains(theory.hashCode());
 	}
 	
+	public List<Theory> findTheories(Theory theory){		
+		return this.theories.get(theory.hashCodeOnlyCurrentState());
+	}
+	
 	public List<Theory> getSortedListForCurrentState(Theory theory){
 		
 		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());

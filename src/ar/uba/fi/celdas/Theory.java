@@ -15,6 +15,9 @@ public class Theory  implements Comparable<Theory>{
 	int successCount;
 	float utility;
 	
+	public Theory(char[][] currentState, ACTIONS action, char[][] predictedState) {
+		// TODO Auto-generated constructor stub
+	}
 	public char[][] getCurrentState() {
 		return currentState;
 	}
