@@ -15,7 +15,7 @@ import tools.ElapsedCpuTimer;
  * Time: 21:45
  * This is a Java port from Tom Schaul's VGDL - https://github.com/schaul/py-vgdl
  */
-public class Agent extends AbstractPlayer {
+public class Agent2 extends AbstractPlayer {
     /**
      * Random generator for the agent.
      */
@@ -33,7 +33,7 @@ public class Agent extends AbstractPlayer {
      * @param so state observation of the current game.
      * @param elapsedTimer Timer for the controller creation.
      */
-    public Agent(StateObservation so, ElapsedCpuTimer elapsedTimer)
+    public Agent2(StateObservation so, ElapsedCpuTimer elapsedTimer)
     {
         randomGenerator = new Random();
         actions = so.getAvailableActions();

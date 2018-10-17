@@ -1,9 +1,12 @@
 package ar.uba.fi.celdas;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+
+import com.google.gson.JsonIOException;
 
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
@@ -27,8 +30,11 @@ public class Agent extends AbstractPlayer {
      */
     protected ArrayList<Types.ACTIONS> actions;
 
-
     protected Theories theories;
+    
+    protected TheoryFactory theoryFactory;
+    
+    protected Planner planner;
     
     /**
      * Public constructor with state observation and time due.
@@ -39,6 +45,9 @@ public class Agent extends AbstractPlayer {
     {
         randomGenerator = new Random();
         actions = so.getAvailableActions();
+        theories = new Theories();
+        theoryFactory = new TheoryFactory();
+        planner = new Planner();
     }
 
 
@@ -55,46 +64,65 @@ public class Agent extends AbstractPlayer {
     	//TODO: Replace here the content and create an autonomous agent
     	Perception perception = new Perception(stateObs);
         System.out.println(perception.toString());
+        
+        List<Theory> possibleTheories = estimatePossibleTheories(perception);
+        possibleTheories = loadPossibleTheories(possibleTheories);
+        
+        Map<Integer, Float> chances = planner.reevaluateTheories(theories, possibleTheories);
     	
-        int index = randomGenerator.nextInt(actions.size());
-        return actions.get(index);
+        Theory finalTheory = chooseTheory(possibleTheories, chances);
+        finalTheory.addUse();
+        if (!theories.existsTheory(finalTheory)) { 
+        	try {
+				theories.add(finalTheory);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    	}
+//        try {
+//			TheoryPersistant.save(theories);
+//		} catch (JsonIOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+        return finalTheory.getAction();
     }
     
     private List<Theory> estimatePossibleTheories(Perception perception) {
     	List<Theory> possibleTheories = new ArrayList<Theory>();
     	for (Types.ACTIONS action: actions ) {
-        	char[][] predictedState = predictState(perception, action);
-	    	if (!predictedState.equals(perception.getLevel())) {
-	    		possibleTheories.add(new Theory(perception.getLevel(), action, predictedState));
-	    	}
+    		possibleTheories.add(theoryFactory.create(perception, action));
     	}
     	return possibleTheories;
     }
     
-    private char[][] predictState(Perception perception, Types.ACTIONS action) {
-    	char[][] predictedState = new char[perception.getLevelHeight()][perception.getLevelWidth()];
-    	for (int i = 0; i < perception.getLevelHeight(); i++) {
-    		predictedState[i] = Arrays.copyOf(perception.getLevel()[i], perception.getLevel()[i].length);
-		}
-    	int actualAgentYPos = perception.getAgentY();
-    	int actualAgentXPos = perception.getAgentX();
-    	int predictedAgentYPos = perception.getAgentY();
-    	int predictedAgentXPos = perception.getAgentX();
-    	if (action.toString().equals("ACTION_RIGHT")&& (actualAgentXPos < perception.getLevelWidth()-1)) {
-    		predictedAgentXPos = actualAgentXPos + 1;
+    private List<Theory> loadPossibleTheories(List<Theory> possibleTheories) {
+    	List<Theory> existingTheories = theories.getSortedListForCurrentState(possibleTheories.get(0));
+    	for (Theory theory: possibleTheories) {
+    		if (!theories.existsTheory(theory)) { existingTheories.add(theory);};
     	}
-    	if (action.toString().equals("ACTION_LEFT") && (actualAgentXPos > 0)) {
-    		predictedAgentXPos = actualAgentXPos - 1;
+    	return existingTheories;
+    }
+    
+    private Theory chooseTheory(List<Theory> possibleTheories, Map<Integer, Float> chances) {
+    	List<Theory> finalTheories = planner.filterTheories(possibleTheories);
+    	int randomInt = 0;
+    	for (Theory theory: finalTheories) {
+    		randomInt += Math.round(chances.get(theory.hashCode()));
     	}
-    	if (action.toString().equals("ACTION_DOWN")&& (actualAgentYPos < perception.getLevelHeight()-1)) {
-    		predictedAgentYPos = actualAgentYPos + 1;
+    	int index = randomGenerator.nextInt(randomInt);
+    	int searchIndex = 0;
+    	for (Theory theory: finalTheories) {
+    		int theoryChances = Math.round(chances.get(theory.hashCode()));
+    		if ((index >= searchIndex) && (index < searchIndex+theoryChances)) {
+    			return theory;
+    		}
+    		searchIndex += theoryChances;
     	}
-    	if (action.toString().equals("ACTION_UP") && (actualAgentYPos > 0)) {
-    		predictedAgentYPos = actualAgentYPos - 1;
-    	}
-    	predictedState[actualAgentYPos][actualAgentXPos] = '.';
-    	predictedState[predictedAgentYPos][predictedAgentXPos] = 'A';
-    	return predictedState;
+    	return possibleTheories.get(0);
     }
 
 }

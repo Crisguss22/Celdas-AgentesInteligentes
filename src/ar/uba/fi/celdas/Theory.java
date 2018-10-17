@@ -16,7 +16,12 @@ public class Theory  implements Comparable<Theory>{
 	float utility;
 	
 	public Theory(char[][] currentState, ACTIONS action, char[][] predictedState) {
-		// TODO Auto-generated constructor stub
+		this.currentState = currentState;
+		this.action = action;
+		this.predictedState = predictedState;
+		usedCount = 0;
+		successCount = 0;
+		utility = 0;
 	}
 	public char[][] getCurrentState() {
 		return currentState;
@@ -42,17 +47,26 @@ public class Theory  implements Comparable<Theory>{
 	public void setUsedCount(int usedCount) {
 		this.usedCount = usedCount;
 	}
+	public void addUse() {
+		this.usedCount += 1;
+	}
 	public int getSuccessCount() {
 		return successCount;
 	}
 	public void setSuccessCount(int successCount) {
 		this.successCount = successCount;
 	}
+	public void addSuccess() {
+		this.successCount += 1;
+	}
 	public float getUtility() {
 		return utility;
 	}
 	public void setUtility(float utility) {
 		this.utility = utility;
+	}
+	public boolean hasFailed() {
+		return (usedCount > successCount);
 	}
 	
 	private String charArrayToStr(char[][] charrarray ){
@@ -99,6 +113,10 @@ public class Theory  implements Comparable<Theory>{
 	
 	public int hashCodeOnlyCurrentState() {
 		return this.charArrayToStr(currentState).hashCode();
+	}
+	
+	public int hashCodeOnlyPredictedState() {
+		return this.charArrayToStr(predictedState).hashCode();
 	}
 
    @Override

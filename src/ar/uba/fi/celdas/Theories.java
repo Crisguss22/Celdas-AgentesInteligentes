@@ -35,11 +35,17 @@ public class Theories {
 		return this.existenceSet.contains(theory.hashCode());
 	}
 	
-	public List<Theory> findTheories(Theory theory){		
-		return this.theories.get(theory.hashCodeOnlyCurrentState());
+	public List<Theory> getSortedListForCurrentState(Theory theory){
+		
+		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
+		if(theoryList == null){
+			theoryList = new ArrayList<Theory>();
+		}		
+		Collections.sort(theoryList);
+		return theoryList;
 	}
 	
-	public List<Theory> getSortedListForCurrentState(Theory theory){
+	public List<Theory> getSortedListForPredictedtState(Theory theory){
 		
 		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
 		if(theoryList == null){
