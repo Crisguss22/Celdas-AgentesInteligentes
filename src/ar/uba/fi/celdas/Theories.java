@@ -23,8 +23,10 @@ public class Theories {
 			List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
 			if(theoryList == null){
 				theoryList = new ArrayList<Theory>();
+				this.theories.put(theory.hashCodeOnlyCurrentState(), theoryList);
 			}
 			theoryList.add(theory);
+			
 			this.existenceSet.add(theory.hashCode());
 		}else{
 			throw new Exception("Theory already exist!");
@@ -47,7 +49,7 @@ public class Theories {
 	
 	public List<Theory> getSortedListForPredictedtState(Theory theory){
 		
-		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
+		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyPredictedState());
 		if(theoryList == null){
 			theoryList = new ArrayList<Theory>();
 		}		

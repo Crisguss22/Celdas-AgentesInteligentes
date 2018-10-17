@@ -143,5 +143,9 @@ public class Theory  implements Comparable<Theory>{
 		return (int)Math.round((this.utility-o.utility)*100);
 	}
 	
+	public boolean comparePrediction(char[][] possibleState) {
+		return (charArrayToStr(predictedState).hashCode() == charArrayToStr(possibleState).hashCode());
+	}
+	
 }
 

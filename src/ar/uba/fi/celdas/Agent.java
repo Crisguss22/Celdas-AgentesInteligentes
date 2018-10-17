@@ -36,6 +36,8 @@ public class Agent extends AbstractPlayer {
     
     protected Planner planner;
     
+    protected Theory lastTheory;
+    
     /**
      * Public constructor with state observation and time due.
      * @param so state observation of the current game.
@@ -47,7 +49,10 @@ public class Agent extends AbstractPlayer {
         actions = so.getAvailableActions();
         theories = new Theories();
         theoryFactory = new TheoryFactory();
-        planner = new Planner();
+        planner = new Planner(theories);
+        
+//        actionsIndex = new int[]{3, 3, 3, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1};
+//        counter = -1;
     }
 
 
@@ -61,14 +66,16 @@ public class Agent extends AbstractPlayer {
     public Types.ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
     	
     	
-    	//TODO: Replace here the content and create an autonomous agent
     	Perception perception = new Perception(stateObs);
+    	
         System.out.println(perception.toString());
+        
+        if (lastTheory!=null) {updateTheory(perception);}
         
         List<Theory> possibleTheories = estimatePossibleTheories(perception);
         possibleTheories = loadPossibleTheories(possibleTheories);
         
-        Map<Integer, Float> chances = planner.reevaluateTheories(theories, possibleTheories);
+        Map<Integer, Float> chances = planner.ponderateTheories(possibleTheories);
     	
         Theory finalTheory = chooseTheory(possibleTheories, chances);
         finalTheory.addUse();
@@ -88,6 +95,7 @@ public class Agent extends AbstractPlayer {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
+        lastTheory = finalTheory;
         return finalTheory.getAction();
     }
     
@@ -100,11 +108,15 @@ public class Agent extends AbstractPlayer {
     }
     
     private List<Theory> loadPossibleTheories(List<Theory> possibleTheories) {
+    	List<Theory> finalTheories = new ArrayList<Theory>();
     	List<Theory> existingTheories = theories.getSortedListForCurrentState(possibleTheories.get(0));
-    	for (Theory theory: possibleTheories) {
-    		if (!theories.existsTheory(theory)) { existingTheories.add(theory);};
+    	for (Theory theory: existingTheories) {
+    		finalTheories.add(theory);
     	}
-    	return existingTheories;
+    	for (Theory theory: possibleTheories) {
+    		if (!theories.existsTheory(theory)) { finalTheories.add(theory);};
+    	}
+    	return finalTheories;
     }
     
     private Theory chooseTheory(List<Theory> possibleTheories, Map<Integer, Float> chances) {
@@ -123,6 +135,12 @@ public class Agent extends AbstractPlayer {
     		searchIndex += theoryChances;
     	}
     	return possibleTheories.get(0);
+    }
+    
+    private void updateTheory(Perception perception) {
+    	if (lastTheory.comparePrediction(perception.getLevel())) {
+    		lastTheory.addSuccess();
+    	}
     }
 
 }
