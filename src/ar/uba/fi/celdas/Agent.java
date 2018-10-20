@@ -38,6 +38,11 @@ public class Agent extends AbstractPlayer {
     
     protected Theory lastTheory;
     
+    protected TheoryReevaluator theoryReevaluator;
+    
+//    protected int[] actionsIndex;
+//    protected int counter;
+    
     /**
      * Public constructor with state observation and time due.
      * @param so state observation of the current game.
@@ -50,8 +55,10 @@ public class Agent extends AbstractPlayer {
         theories = new Theories();
         theoryFactory = new TheoryFactory();
         planner = new Planner(theories);
+        theoryReevaluator = new TheoryReevaluator();
         
 //        actionsIndex = new int[]{3, 3, 3, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1};
+//        actionsIndex = new int[]{3, 3, 3, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 //        counter = -1;
     }
 
@@ -63,14 +70,13 @@ public class Agent extends AbstractPlayer {
      * @param elapsedTimer Timer when the action returned is due.
      * @return An action for the current state
      */
-    public Types.ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
-    	
+    public Types.ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {    	
     	
     	Perception perception = new Perception(stateObs);
     	
         System.out.println(perception.toString());
         
-        if (lastTheory!=null) {updateTheory(perception);}
+        if (lastTheory!=null) {theoryReevaluator.updateTheoryMidGame(stateObs, lastTheory);}
         
         List<Theory> possibleTheories = estimatePossibleTheories(perception);
         possibleTheories = loadPossibleTheories(possibleTheories);
@@ -86,17 +92,32 @@ public class Agent extends AbstractPlayer {
 				e.printStackTrace();
 			}
     	}
-//        try {
-//			TheoryPersistant.save(theories);
-//		} catch (JsonIOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+        
         lastTheory = finalTheory;
         return finalTheory.getAction();
+//        counter ++;
+//        return actions.get(actionsIndex[counter]);
+    }
+    
+    public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
+    	
+    	boolean gameOver = stateObs.isGameOver();
+    	boolean isAlive = stateObs.isAvatarAlive();
+    	
+    	Perception perception = new Perception(stateObs);
+    	theoryReevaluator.updateTheoryEndGame(stateObs, lastTheory);
+    	
+    	if (gameOver) {    	
+	    	try {
+				TheoryPersistant.save(theories);
+			} catch (JsonIOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}  
+    	}
     }
     
     private List<Theory> estimatePossibleTheories(Perception perception) {
