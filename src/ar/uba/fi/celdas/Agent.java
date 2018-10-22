@@ -21,9 +21,7 @@ import tools.ElapsedCpuTimer;
  * This is a Java port from Tom Schaul's VGDL - https://github.com/schaul/py-vgdl
  */
 public class Agent extends AbstractPlayer {
-    /**
-     * Random generator for the agent.
-     */
+
     protected Random randomGenerator;
     /**
      * List of available actions for the agent
@@ -36,10 +34,10 @@ public class Agent extends AbstractPlayer {
     
     protected Planner planner;
     
-    protected Theory lastTheory;
+    protected Theory presentTheory;
     
-    protected TheoryReevaluator theoryReevaluator;
-    
+    protected TheoryUpdater theoryUpdater;
+
 //    protected int[] actionsIndex;
 //    protected int counter;
     
@@ -55,7 +53,7 @@ public class Agent extends AbstractPlayer {
         theories = new Theories();
         theoryFactory = new TheoryFactory();
         planner = new Planner(theories);
-        theoryReevaluator = new TheoryReevaluator();
+        theoryUpdater = new TheoryUpdater();
         
 //        actionsIndex = new int[]{3, 3, 3, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1};
 //        actionsIndex = new int[]{3, 3, 3, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -76,69 +74,142 @@ public class Agent extends AbstractPlayer {
     	
         System.out.println(perception.toString());
         
-        if (lastTheory!=null) {theoryReevaluator.updateTheoryMidGame(stateObs, lastTheory);}
+        if (presentTheory!=null) {theoryUpdater.updateTheoryMidGame(stateObs, presentTheory);}
+        addToTheories(presentTheory);
         
-        List<Theory> possibleTheories = estimatePossibleTheories(perception);
-        possibleTheories = loadPossibleTheories(possibleTheories);
+        List<Theory> knownTheories = loadKnownTheories(perception);
         
-        Map<Integer, Float> chances = planner.ponderateTheories(possibleTheories);
-    	
-        Theory finalTheory = chooseTheory(possibleTheories, chances);
-        finalTheory.addUse();
-        if (!theories.existsTheory(finalTheory)) { 
-        	try {
-				theories.add(finalTheory);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+        List<Theory> usefulTheories = filterUsefulTheories(knownTheories);
+        
+        if ((usefulTheories.size() > 0  && !explore()) || actionsNotIncluded(knownTheories).size() == 0) {
+        	planNext(usefulTheories, perception);
+        } else {
+        	makeRandomTheory(knownTheories, perception);
     	}
+
+//		Map<Integer, Float> chances = planner.ponderateTheories(knownTheories);
+    	
+//        Theory finalTheory = chooseTheory(knownTheories, chances);
+//        finalTheory.addUse();
         
-        lastTheory = finalTheory;
-        return finalTheory.getAction();
+        return presentTheory.getAction();
 //        counter ++;
 //        return actions.get(actionsIndex[counter]);
     }
-    
-    public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
+
+
+	public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
     	
     	boolean gameOver = stateObs.isGameOver();
-    	boolean isAlive = stateObs.isAvatarAlive();
     	
     	Perception perception = new Perception(stateObs);
-    	theoryReevaluator.updateTheoryEndGame(stateObs, lastTheory);
+    	theoryUpdater.updateTheoryEndGame(stateObs, presentTheory);
+        addToTheories(presentTheory);
     	
     	if (gameOver) {    	
 	    	try {
 				TheoryPersistant.save(theories);
 			} catch (JsonIOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}  
     	}
     }
     
-    private List<Theory> estimatePossibleTheories(Perception perception) {
-    	List<Theory> possibleTheories = new ArrayList<Theory>();
-    	for (Types.ACTIONS action: actions ) {
-    		possibleTheories.add(theoryFactory.create(perception, action));
-    	}
-    	return possibleTheories;
-    }
-    
-    private List<Theory> loadPossibleTheories(List<Theory> possibleTheories) {
+    private List<Theory> loadKnownTheories(Perception perception) {
     	List<Theory> finalTheories = new ArrayList<Theory>();
-    	List<Theory> existingTheories = theories.getSortedListForCurrentState(possibleTheories.get(0));
+    	List<Theory> existingTheories = theories.getSortedListForCurrentState(perception);
     	for (Theory theory: existingTheories) {
     		finalTheories.add(theory);
     	}
-    	for (Theory theory: possibleTheories) {
-    		if (!theories.existsTheory(theory)) { finalTheories.add(theory);};
-    	}
     	return finalTheories;
     }
+    
+    private List<Theory> filterUsefulTheories(List<Theory> knownTheories) {
+    	List<Theory> finalTheories = new ArrayList<Theory>();
+    	for (Theory theory: knownTheories) {
+    		if (theory.getUtility() > 0) {
+    			finalTheories.add(theory);
+    		}
+    	}
+    	return finalTheories;
+	}
+    
+    private boolean explore() {
+    	int result = randomGenerator.nextInt(1);
+		return (result == 1);
+	}
+    
+    private void planNext(List<Theory> usefulTheories, Perception perception) {
+		for (Theory theory:usefulTheories) {
+			if (theory.getUtility() > 100) { 
+				presentTheory = theory;
+				return;
+			}
+		}
+		if (this.theories.knownVictory()) {
+			presentTheory = planner.planVictory(usefulTheories);
+		} else {
+			presentTheory = planner.selectTheory(usefulTheories);
+		}
+	}
+    
+    private List<Types.ACTIONS> actionsNotIncluded(List<Theory> exceptions) {
+    	List<Types.ACTIONS> actionsExceptions = new ArrayList<Types.ACTIONS>();
+		for (Theory exception: exceptions) {
+			actionsExceptions.add(exception.getAction());
+		}
+		List<Types.ACTIONS> availableActions = new ArrayList<Types.ACTIONS>();
+		for (Types.ACTIONS action: actions) {
+			if (!actionsExceptions.contains(action)) { availableActions.add(action); }
+		}
+		return availableActions;
+    }
+
+	private void makeRandomTheory(List<Theory> exceptions, Perception perception) {
+		List<Types.ACTIONS> possibleActions = actionsNotIncluded(exceptions);
+		int index = randomGenerator.nextInt(possibleActions.size()-1);
+		int counter = 0;
+		for (Types.ACTIONS action: possibleActions) {
+			if (index==counter) {
+				presentTheory = new Theory(perception.getLevel(), action);
+				return;
+			} else {
+				counter += 1;
+			}
+		}		
+	}
+	
+	private void addToTheories(Theory theory) {
+		if (!theories.existsTheory(theory)) { 
+        	try {
+				theories.add(theory);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    	}
+	}
+    
+//    private List<Theory> estimatePossibleTheories(Perception perception) {
+//    	List<Theory> possibleTheories = new ArrayList<Theory>();
+//    	for (Types.ACTIONS action: actions ) {
+//    		possibleTheories.add(theoryFactory.create(perception, action));
+//    	}
+//    	return possibleTheories;
+//    }
+    
+//    private List<Theory> loadPossibleTheories(List<Theory> possibleTheories) {
+//    	List<Theory> finalTheories = new ArrayList<Theory>();
+//    	List<Theory> existingTheories = theories.getSortedListForCurrentState(possibleTheories.get(0));
+//    	for (Theory theory: existingTheories) {
+//    		finalTheories.add(theory);
+//    	}
+//    	for (Theory theory: possibleTheories) {
+//    		if (!theories.existsTheory(theory)) { finalTheories.add(theory);};
+//    	}
+//    	return finalTheories;
+//    }
     
     private Theory chooseTheory(List<Theory> possibleTheories, Map<Integer, Float> chances) {
     	List<Theory> finalTheories = planner.filterTheories(possibleTheories);
@@ -156,12 +227,6 @@ public class Agent extends AbstractPlayer {
     		searchIndex += theoryChances;
     	}
     	return possibleTheories.get(0);
-    }
-    
-    private void updateTheory(Perception perception) {
-    	if (lastTheory.comparePrediction(perception.getLevel())) {
-    		lastTheory.addSuccess();
-    	}
     }
 
 }

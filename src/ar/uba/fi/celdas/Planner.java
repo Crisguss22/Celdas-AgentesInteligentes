@@ -67,4 +67,14 @@ public class Planner {
 		return filteredTheories;
 	}
 
+	public Theory planVictory(List<Theory> usefulTheories) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Theory selectTheory(List<Theory> usefulTheories) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

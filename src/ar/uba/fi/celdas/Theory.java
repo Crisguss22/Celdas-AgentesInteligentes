@@ -15,6 +15,17 @@ public class Theory  implements Comparable<Theory>{
 	int successCount;
 	float utility;
 	
+	public Theory(char[][] currentState) {
+		this.currentState = currentState;
+	}
+	public Theory(char[][] currentState, ACTIONS action) {
+		this.currentState = currentState;
+		this.action = action;
+		this.predictedState = null;
+		usedCount = 0;
+		successCount = 0;
+		utility = 0;
+	}	
 	public Theory(char[][] currentState, ACTIONS action, char[][] predictedState) {
 		this.currentState = currentState;
 		this.action = action;
@@ -23,6 +34,7 @@ public class Theory  implements Comparable<Theory>{
 		successCount = 0;
 		utility = 0;
 	}
+	
 	public char[][] getCurrentState() {
 		return currentState;
 	}

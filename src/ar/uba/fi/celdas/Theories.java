@@ -37,6 +37,13 @@ public class Theories {
 		return this.existenceSet.contains(theory.hashCode());
 	}
 	
+	public List<Theory> getSortedListForCurrentState(Perception perception){
+		
+		Theory theory = new Theory(perception.getLevel());
+		
+		return getSortedListForCurrentState(theory);
+	}
+	
 	public List<Theory> getSortedListForCurrentState(Theory theory){
 		
 		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
@@ -71,6 +78,11 @@ public class Theories {
 
 	public void setTheories(Map<Integer, List<Theory>> theories) {
 		this.theories = theories;
+	}
+
+	public boolean knownVictory() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
