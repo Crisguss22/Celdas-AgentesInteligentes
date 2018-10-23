@@ -27,10 +27,10 @@ public class Theories {
 				theoryListC = new ArrayList<Theory>();
 				this.theoriesByCurrent.put(theory.hashCodeOnlyCurrentState(), theoryListC);
 			}			
-			List<Theory> theoryListP = this.theoriesByCurrent.get(theory.hashCodeOnlyCurrentState());
+			List<Theory> theoryListP = this.theoriesByPredicted.get(theory.hashCodeOnlyPredictedState());
 			if(theoryListP == null){
 				theoryListP = new ArrayList<Theory>();
-				this.theoriesByCurrent.put(theory.hashCodeOnlyCurrentState(), theoryListP);
+				this.theoriesByPredicted.put(theory.hashCodeOnlyPredictedState(), theoryListP);
 			}
 			theoryListP.add(theory);
 			theoryListC.add(theory);

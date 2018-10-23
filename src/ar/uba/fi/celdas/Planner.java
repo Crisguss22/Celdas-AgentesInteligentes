@@ -24,6 +24,9 @@ public class Planner {
 	}
 
 	public Theory selectTheory(List<Theory> usefulTheories) {
+		if (usefulTheories.size() < 2) { 
+			return usefulTheories.get(0);
+		}
 		float sum = 0;
 		for (Theory theory: usefulTheories) {
 			sum += theory.getUtility()*100;

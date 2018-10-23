@@ -98,11 +98,6 @@ public class Agent extends AbstractPlayer {
         } else {
         	makeRandomTheory(knownTheories, perception);
     	}
-
-//		Map<Integer, Float> chances = planner.ponderateTheories(knownTheories);
-    	
-//        Theory finalTheory = chooseTheory(knownTheories, chances);
-//        finalTheory.addUse();
         
         return presentTheory.getAction();
 //        counter ++;
@@ -149,7 +144,7 @@ public class Agent extends AbstractPlayer {
 	}
     
     private boolean explore() {
-    	int result = randomGenerator.nextInt(1);
+    	int result = randomGenerator.nextInt(2);
 		return (result == 1);
 	}
     
@@ -181,7 +176,11 @@ public class Agent extends AbstractPlayer {
 
 	private void makeRandomTheory(List<Theory> exceptions, Perception perception) {
 		List<Types.ACTIONS> possibleActions = actionsNotIncluded(exceptions);
-		int index = randomGenerator.nextInt(possibleActions.size()-1);
+		if (possibleActions.size() < 2) { 
+			presentTheory =  new Theory(perception.getLevel(), possibleActions.get(0)); 
+			return;
+		}
+		int index = randomGenerator.nextInt(possibleActions.size());
 		int counter = 0;
 		for (Types.ACTIONS action: possibleActions) {
 			if (index==counter) {

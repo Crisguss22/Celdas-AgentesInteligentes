@@ -32,6 +32,7 @@ public class TheoryUpdater {
 			theoryPredictedWell(theory, perception);
 			return;
 		}
+		theory.setUtility(utility);
 		theory.setPredictedState(perception.getLevel());
 		theory.addSuccess();		
 	}

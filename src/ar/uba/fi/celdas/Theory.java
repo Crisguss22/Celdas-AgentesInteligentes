@@ -133,7 +133,7 @@ public class Theory  implements Comparable<Theory>{
 	public int hashCodeOnlyPredictedState() {
 		return this.charArrayToStr(predictedState).hashCode();
 	}
-
+	
    @Override
    public boolean equals(Object obj) {
       if (this == obj)
@@ -167,7 +167,7 @@ public class Theory  implements Comparable<Theory>{
 	}
 	
 	public boolean incomplete() {
-		return (currentState!=null && action!=null && predictedState!=null);
+		return (currentState==null || action==null || predictedState==null);
 	}
 	
 }
