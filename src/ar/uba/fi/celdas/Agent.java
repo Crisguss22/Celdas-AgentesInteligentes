@@ -50,7 +50,16 @@ public class Agent extends AbstractPlayer {
     {
         randomGenerator = new Random();
         actions = so.getAvailableActions();
+        
         theories = new Theories();
+        try {
+        	theories = TheoryPersistant.load();
+		} catch (JsonIOException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}  
+        
         theoryFactory = new TheoryFactory();
         planner = new Planner(theories);
         theoryUpdater = new TheoryUpdater();
@@ -74,8 +83,11 @@ public class Agent extends AbstractPlayer {
     	
         System.out.println(perception.toString());
         
-        if (presentTheory!=null) {theoryUpdater.updateTheoryMidGame(stateObs, presentTheory);}
-        addToTheories(presentTheory);
+        if (presentTheory!=null) {
+        	theoryUpdater.updateTheoryMidGame(stateObs, presentTheory);
+            addToTheories(presentTheory);
+    	}
+        presentTheory = new Theory();
         
         List<Theory> knownTheories = loadKnownTheories(perception);
         
@@ -119,7 +131,7 @@ public class Agent extends AbstractPlayer {
     
     private List<Theory> loadKnownTheories(Perception perception) {
     	List<Theory> finalTheories = new ArrayList<Theory>();
-    	List<Theory> existingTheories = theories.getSortedListForCurrentState(perception);
+    	List<Theory> existingTheories = theories.getSortedListByCurrentState(perception);
     	for (Theory theory: existingTheories) {
     		finalTheories.add(theory);
     	}
@@ -211,22 +223,22 @@ public class Agent extends AbstractPlayer {
 //    	return finalTheories;
 //    }
     
-    private Theory chooseTheory(List<Theory> possibleTheories, Map<Integer, Float> chances) {
-    	List<Theory> finalTheories = planner.filterTheories(possibleTheories);
-    	int randomInt = 0;
-    	for (Theory theory: finalTheories) {
-    		randomInt += Math.round(chances.get(theory.hashCode()));
-    	}
-    	int index = randomGenerator.nextInt(randomInt);
-    	int searchIndex = 0;
-    	for (Theory theory: finalTheories) {
-    		int theoryChances = Math.round(chances.get(theory.hashCode()));
-    		if ((index >= searchIndex) && (index < searchIndex+theoryChances)) {
-    			return theory;
-    		}
-    		searchIndex += theoryChances;
-    	}
-    	return possibleTheories.get(0);
-    }
+//    private Theory chooseTheory(List<Theory> possibleTheories, Map<Integer, Float> chances) {
+//    	List<Theory> finalTheories = planner.filterTheories(possibleTheories);
+//    	int randomInt = 0;
+//    	for (Theory theory: finalTheories) {
+//    		randomInt += Math.round(chances.get(theory.hashCode()));
+//    	}
+//    	int index = randomGenerator.nextInt(randomInt);
+//    	int searchIndex = 0;
+//    	for (Theory theory: finalTheories) {
+//    		int theoryChances = Math.round(chances.get(theory.hashCode()));
+//    		if ((index >= searchIndex) && (index < searchIndex+theoryChances)) {
+//    			return theory;
+//    		}
+//    		searchIndex += theoryChances;
+//    	}
+//    	return possibleTheories.get(0);
+//    }
 
 }

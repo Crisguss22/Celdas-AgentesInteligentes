@@ -10,22 +10,30 @@ import java.util.Set;
 
 public class Theories {
 	
-	Map<Integer,List<Theory>> theories;
+	Map<Integer,List<Theory>> theoriesByCurrent;
+	Map<Integer,List<Theory>> theoriesByPredicted;
 	Set<Integer> existenceSet;
 	
 	public Theories(){
-		this.theories = new HashMap<Integer, List<Theory>>();
+		this.theoriesByCurrent = new HashMap<Integer, List<Theory>>();
+		this.theoriesByPredicted = new HashMap<Integer, List<Theory>>();
 		this.existenceSet = new HashSet<Integer>();
 	}
 	
 	public void add(Theory theory) throws Exception{
 		if(!existsTheory(theory)){			
-			List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
-			if(theoryList == null){
-				theoryList = new ArrayList<Theory>();
-				this.theories.put(theory.hashCodeOnlyCurrentState(), theoryList);
+			List<Theory> theoryListC = this.theoriesByCurrent.get(theory.hashCodeOnlyCurrentState());
+			if(theoryListC == null){
+				theoryListC = new ArrayList<Theory>();
+				this.theoriesByCurrent.put(theory.hashCodeOnlyCurrentState(), theoryListC);
+			}			
+			List<Theory> theoryListP = this.theoriesByCurrent.get(theory.hashCodeOnlyCurrentState());
+			if(theoryListP == null){
+				theoryListP = new ArrayList<Theory>();
+				this.theoriesByCurrent.put(theory.hashCodeOnlyCurrentState(), theoryListP);
 			}
-			theoryList.add(theory);
+			theoryListP.add(theory);
+			theoryListC.add(theory);
 			
 			this.existenceSet.add(theory.hashCode());
 		}else{
@@ -37,16 +45,33 @@ public class Theories {
 		return this.existenceSet.contains(theory.hashCode());
 	}
 	
-	public List<Theory> getSortedListForCurrentState(Perception perception){
+	public List<Theory> getSortedListByCurrentState(Perception perception){
 		
 		Theory theory = new Theory(perception.getLevel());
 		
-		return getSortedListForCurrentState(theory);
+		return getSortedListByCurrentState(theory);
 	}
 	
-	public List<Theory> getSortedListForCurrentState(Theory theory){
+	public List<Theory> getSortedListByCurrentState(Theory theory){
 		
-		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyCurrentState());
+		List<Theory> theoryList = this.theoriesByCurrent.get(theory.hashCodeOnlyCurrentState());
+		if(theoryList == null){
+			theoryList = new ArrayList<Theory>();
+		}		
+		Collections.sort(theoryList);
+		return theoryList;
+	}
+	
+	public List<Theory> getSortedListByPredictedState(Perception perception){
+		
+		Theory theory = new Theory(perception.getLevel());
+		
+		return getSortedListByPredictedState(theory);
+	}
+	
+	public List<Theory> getSortedListByPredictedState(Theory theory){
+		
+		List<Theory> theoryList = this.theoriesByPredicted.get(theory.hashCodeOnlyPredictedState());
 		if(theoryList == null){
 			theoryList = new ArrayList<Theory>();
 		}		
@@ -56,7 +81,7 @@ public class Theories {
 	
 	public List<Theory> getSortedListForPredictedtState(Theory theory){
 		
-		List<Theory> theoryList = this.theories.get(theory.hashCodeOnlyPredictedState());
+		List<Theory> theoryList = this.theoriesByCurrent.get(theory.hashCodeOnlyPredictedState());
 		if(theoryList == null){
 			theoryList = new ArrayList<Theory>();
 		}		
@@ -73,11 +98,11 @@ public class Theories {
 	}
 
 	public Map<Integer, List<Theory>> getTheories() {
-		return theories;
+		return theoriesByCurrent;
 	}
 
 	public void setTheories(Map<Integer, List<Theory>> theories) {
-		this.theories = theories;
+		this.theoriesByCurrent = theories;
 	}
 
 	public boolean knownVictory() {

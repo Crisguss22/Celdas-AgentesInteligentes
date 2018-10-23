@@ -35,6 +35,9 @@ public class Theory  implements Comparable<Theory>{
 		utility = 0;
 	}
 	
+	public Theory() {
+		// TODO Auto-generated constructor stub
+	}
 	public char[][] getCurrentState() {
 		return currentState;
 	}
@@ -155,8 +158,16 @@ public class Theory  implements Comparable<Theory>{
 		return (int)Math.round((this.utility-o.utility)*100);
 	}
 	
+	public boolean compareCurrent(char[][] possibleState) {
+		return (charArrayToStr(currentState).hashCode() == charArrayToStr(possibleState).hashCode());
+	}
+	
 	public boolean comparePrediction(char[][] possibleState) {
 		return (charArrayToStr(predictedState).hashCode() == charArrayToStr(possibleState).hashCode());
+	}
+	
+	public boolean incomplete() {
+		return (currentState!=null && action!=null && predictedState!=null);
 	}
 	
 }
