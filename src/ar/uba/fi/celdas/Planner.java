@@ -1,20 +1,22 @@
 package ar.uba.fi.celdas;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class Planner {
 	
 	private Theories theories;
 	
 	protected Random randomGenerator;
+	Map<Integer,Integer> statesUndergone;
+	Integer lastState;
     
 	public Planner(Theories theories) {
 		this.theories = theories;
+		this.statesUndergone = new HashMap<Integer, Integer>();
 		randomGenerator = new Random();
 	}
 
@@ -29,13 +31,13 @@ public class Planner {
 		}
 		float sum = 0;
 		for (Theory theory: usefulTheories) {
-			sum += theory.getUtility()*100;
+			sum += theoryScore(theory);
 		}
 		int index = randomGenerator.nextInt(Math.round(sum-1));
 		int counter = 0;
 		Theory chosenTheory;
 		for (Theory theory: usefulTheories) {
-			int theoryChances = Math.round(theory.getUtility()*100);
+			int theoryChances = theoryScore(theory);
     		if ((index >= counter) && (index < counter+theoryChances)) {
     			return theory;
     		}
@@ -44,19 +46,34 @@ public class Planner {
 		return usefulTheories.get(0);
 	}
 
-//	public Map<Integer, Float> ponderateTheories(List<Theory> possibleTheories) {
-//		// TODO Auto-generated method stub
-//		Map<Integer, Float> theoriesPunctuations = new HashMap<Integer, Float>();
-//		List<Theory> filteredTheories = filterTheories(possibleTheories);
-//		for (Theory theory: filteredTheories) {
-//			float eval = evaluateTheory(theories, theory);
-//			if (eval < 0) { eval = 0;}
-//			theoriesPunctuations.put(theory.hashCode(), eval);
-//		}
-//		
-//		return theoriesPunctuations;
-//	}
-//	
+	public void registerTheory(Theory theory) {
+		int key = theory.hashCodeOnlyCurrentState();
+		if (!statesUndergone.containsKey(key)) {
+			statesUndergone.put(key, 1);
+		}
+		lastState = key;
+		updateStatesUndergone();
+	}
+
+	private void updateStatesUndergone() {
+		Set<Integer> keys = statesUndergone.keySet();
+		for (Integer key: keys) {
+			int oldValue = statesUndergone.get(key);
+			statesUndergone.replace(key, oldValue+1);
+		}
+	}
+	
+	public int theoryScore(Theory theory) {
+		int key = theory.hashCodeOnlyPredictedState();
+		int modifier = 1;
+		if (statesUndergone.containsKey(key)) {
+			modifier = statesUndergone.get(key);
+			if (modifier > 8) {modifier = 8;}
+		}
+		if (key==lastState) { modifier = 20;}
+		return Math.round((theory.getUtility()*1000) / modifier);
+	}
+
 //	private float evaluateTheory(Theories theories, Theory theory) {
 //		List<Theory> possibleNextTheories = theories.getSortedListForPredictedtState(theory);
 //		List<Integer> statesPassed = new ArrayList<Integer>();

@@ -3,7 +3,6 @@ package ar.uba.fi.celdas;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import com.google.gson.JsonIOException;
@@ -86,6 +85,7 @@ public class Agent extends AbstractPlayer {
         if (presentTheory!=null) {
         	theoryUpdater.updateTheoryMidGame(stateObs, presentTheory);
             addToTheories(presentTheory);
+            if (presentTheory.getUtility() > 0) {planner.registerTheory(presentTheory);}
     	}
         presentTheory = new Theory();
         
@@ -201,43 +201,4 @@ public class Agent extends AbstractPlayer {
 			}
     	}
 	}
-    
-//    private List<Theory> estimatePossibleTheories(Perception perception) {
-//    	List<Theory> possibleTheories = new ArrayList<Theory>();
-//    	for (Types.ACTIONS action: actions ) {
-//    		possibleTheories.add(theoryFactory.create(perception, action));
-//    	}
-//    	return possibleTheories;
-//    }
-    
-//    private List<Theory> loadPossibleTheories(List<Theory> possibleTheories) {
-//    	List<Theory> finalTheories = new ArrayList<Theory>();
-//    	List<Theory> existingTheories = theories.getSortedListForCurrentState(possibleTheories.get(0));
-//    	for (Theory theory: existingTheories) {
-//    		finalTheories.add(theory);
-//    	}
-//    	for (Theory theory: possibleTheories) {
-//    		if (!theories.existsTheory(theory)) { finalTheories.add(theory);};
-//    	}
-//    	return finalTheories;
-//    }
-    
-//    private Theory chooseTheory(List<Theory> possibleTheories, Map<Integer, Float> chances) {
-//    	List<Theory> finalTheories = planner.filterTheories(possibleTheories);
-//    	int randomInt = 0;
-//    	for (Theory theory: finalTheories) {
-//    		randomInt += Math.round(chances.get(theory.hashCode()));
-//    	}
-//    	int index = randomGenerator.nextInt(randomInt);
-//    	int searchIndex = 0;
-//    	for (Theory theory: finalTheories) {
-//    		int theoryChances = Math.round(chances.get(theory.hashCode()));
-//    		if ((index >= searchIndex) && (index < searchIndex+theoryChances)) {
-//    			return theory;
-//    		}
-//    		searchIndex += theoryChances;
-//    	}
-//    	return possibleTheories.get(0);
-//    }
-
 }
