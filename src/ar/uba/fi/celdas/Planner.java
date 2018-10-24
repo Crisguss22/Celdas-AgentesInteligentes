@@ -1,5 +1,6 @@
 package ar.uba.fi.celdas;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,17 +13,14 @@ public class Planner {
 	
 	protected Random randomGenerator;
 	Map<Integer,Integer> statesUndergone;
+	List<Theory> currentPlan;
 	Integer lastState;
     
 	public Planner(Theories theories) {
 		this.theories = theories;
 		this.statesUndergone = new HashMap<Integer, Integer>();
 		randomGenerator = new Random();
-	}
-
-	public Theory planVictory(List<Theory> usefulTheories) {
-		// TODO Auto-generated method stub
-		return null;
+		currentPlan = new ArrayList<Theory>();
 	}
 
 	public Theory selectTheory(List<Theory> usefulTheories) {
@@ -35,7 +33,6 @@ public class Planner {
 		}
 		int index = randomGenerator.nextInt(Math.round(sum-1));
 		int counter = 0;
-		Theory chosenTheory;
 		for (Theory theory: usefulTheories) {
 			int theoryChances = theoryScore(theory);
     		if ((index >= counter) && (index < counter+theoryChances)) {
@@ -72,6 +69,61 @@ public class Planner {
 		}
 		if (key==lastState) { modifier = 20;}
 		return Math.round((theory.getUtility()*1000) / modifier);
+	}
+
+	public Theory planVictory(List<Theory> usefulTheories) {		
+		Theory nextTheory = getNextTheoryInPlan(usefulTheories.get(0).hashCodeOnlyCurrentState());
+		
+		if (nextTheory==null) {
+			makeNewPlan(usefulTheories);
+			nextTheory = getNextTheoryInPlan(usefulTheories.get(0).hashCodeOnlyCurrentState());
+		}
+		
+		if (nextTheory==null) {
+			return selectTheory(usefulTheories);
+		}
+		
+		return nextTheory;
+	}
+
+	private Theory getNextTheoryInPlan(int currentState) {
+		for (Theory theory: currentPlan) {
+			if (theory.hashCodeOnlyCurrentState() == currentState) {
+				return theory;
+			}
+		}
+		return null;
+	}
+
+	private void makeNewPlan(List<Theory> usefulTheories) {
+		List<Theory> winningTheories = theories.getWinningTheories();
+		int currentState = usefulTheories.get(0).hashCodeOnlyCurrentState();
+		for (Theory theory: winningTheories) {
+			List<Integer> statesAlreadyCovered = new ArrayList<Integer>();
+			statesAlreadyCovered.add(theory.hashCodeOnlyCurrentState());
+			List<Theory> possiblePlan = makePathLeadingHere(currentState, statesAlreadyCovered, theory.hashCodeOnlyCurrentState());
+			currentPlan = possiblePlan;
+		}
+	}
+
+	private List<Theory> makePathLeadingHere(int currentState, List<Integer> statesAlreadyCovered,
+			int here) {
+		List<Theory> theoriesLeadingHere = theories.getSortedListByPredictedState(here);
+		List<Theory> formingPlan = new ArrayList<Theory>();
+		for (Theory theory:theoriesLeadingHere) {
+			if (theory.hashCodeOnlyCurrentState() == currentState) {
+				formingPlan.add(theory);
+				return formingPlan;
+			}
+			statesAlreadyCovered.add(theory.hashCodeOnlyCurrentState());
+			List<Theory> tryingPlan = makePathLeadingHere(currentState, statesAlreadyCovered, theory.hashCodeOnlyCurrentState());
+			if (tryingPlan!=null) {
+				formingPlan = tryingPlan;
+				formingPlan.add(theory);
+				return formingPlan;
+			}
+		}
+		return null;
 	}
 
 //	private float evaluateTheory(Theories theories, Theory theory) {

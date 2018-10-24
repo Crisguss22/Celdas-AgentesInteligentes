@@ -1,10 +1,7 @@
 package ar.uba.fi.celdas;
 
-import java.awt.event.KeyEvent;
-
 import ontology.Types;
 import ontology.Types.ACTIONS;
-import tools.Vector2d;
 
 public class Theory  implements Comparable<Theory>{
 

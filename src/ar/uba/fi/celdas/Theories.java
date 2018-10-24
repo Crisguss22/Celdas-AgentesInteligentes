@@ -12,14 +12,16 @@ public class Theories {
 	
 	Map<Integer,List<Theory>> theoriesByCurrent;
 	Map<Integer,List<Theory>> theoriesByPredicted;
+	List<Theory> winningTheories;
 	Set<Integer> existenceSet;
 	
 	public Theories(){
 		this.theoriesByCurrent = new HashMap<Integer, List<Theory>>();
 		this.theoriesByPredicted = new HashMap<Integer, List<Theory>>();
 		this.existenceSet = new HashSet<Integer>();
+		this.winningTheories = new ArrayList<Theory>();
 	}
-	
+
 	public void add(Theory theory) throws Exception{
 		if(!existsTheory(theory)){			
 			List<Theory> theoryListC = this.theoriesByCurrent.get(theory.hashCodeOnlyCurrentState());
@@ -34,6 +36,8 @@ public class Theories {
 			}
 			theoryListP.add(theory);
 			theoryListC.add(theory);
+			
+			if (theory.getUtility() > 100) { winningTheories.add(theory);}
 			
 			this.existenceSet.add(theory.hashCode());
 		}else{
@@ -106,8 +110,20 @@ public class Theories {
 	}
 
 	public boolean knownVictory() {
-		// TODO Auto-generated method stub
-		return false;
+		return (winningTheories.size() > 0);
+	}
+	
+	public List<Theory> getWinningTheories() {
+		return winningTheories;
+	}
+
+	public List<Theory> getSortedListByPredictedState(int predictedState) {
+		List<Theory> theoryList = this.theoriesByPredicted.get(predictedState);
+		if(theoryList == null){
+			theoryList = new ArrayList<Theory>();
+		}		
+		Collections.sort(theoryList);
+		return theoryList;
 	}
 
 }

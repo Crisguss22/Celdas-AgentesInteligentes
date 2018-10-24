@@ -29,8 +29,6 @@ public class Agent extends AbstractPlayer {
 
     protected Theories theories;
     
-    protected TheoryFactory theoryFactory;
-    
     protected Planner planner;
     
     protected Theory presentTheory;
@@ -59,7 +57,6 @@ public class Agent extends AbstractPlayer {
 			e.printStackTrace();
 		}  
         
-        theoryFactory = new TheoryFactory();
         planner = new Planner(theories);
         theoryUpdater = new TheoryUpdater();
         
@@ -109,7 +106,6 @@ public class Agent extends AbstractPlayer {
     	
     	boolean gameOver = stateObs.isGameOver();
     	
-    	Perception perception = new Perception(stateObs);
     	theoryUpdater.updateTheoryEndGame(stateObs, presentTheory);
         addToTheories(presentTheory);
     	
@@ -144,8 +140,8 @@ public class Agent extends AbstractPlayer {
 	}
     
     private boolean explore() {
-    	int result = randomGenerator.nextInt(2);
-		return (result == 1);
+    	int result = randomGenerator.nextInt(4);
+		return (result > 0);
 	}
     
     private void planNext(List<Theory> usefulTheories, Perception perception) {
