@@ -56,7 +56,7 @@ public class Planner {
 		Set<Integer> keys = statesUndergone.keySet();
 		for (Integer key: keys) {
 			int oldValue = statesUndergone.get(key);
-			statesUndergone.replace(key, oldValue+1);
+			statesUndergone.put(key, oldValue+1);
 		}
 	}
 	
@@ -67,7 +67,7 @@ public class Planner {
 			modifier = statesUndergone.get(key);
 			if (modifier > 8) {modifier = 8;}
 		}
-		if (key==lastState) { modifier = 20;}
+		if (key==lastState) { modifier = modifier * 3;}
 		return Math.round((theory.getUtility()*1000) / modifier);
 	}
 
@@ -108,7 +108,7 @@ public class Planner {
 
 	private List<Theory> makePathLeadingHere(int currentState, List<Integer> statesAlreadyCovered,
 			int here) {
-		List<Theory> theoriesLeadingHere = theories.getSortedListByPredictedState(here);
+		List<Theory> theoriesLeadingHere = filterUsefulTheories(theories.getSortedListByPredictedState(here), statesAlreadyCovered);
 		List<Theory> formingPlan = new ArrayList<Theory>();
 		for (Theory theory:theoriesLeadingHere) {
 			if (theory.hashCodeOnlyCurrentState() == currentState) {
@@ -124,6 +124,16 @@ public class Planner {
 			}
 		}
 		return null;
+	}
+	
+	private List<Theory> filterUsefulTheories(List<Theory> knownTheories, List<Integer> statesAlreadyCovered ) {
+    	List<Theory> finalTheories = new ArrayList<Theory>();
+    	for (Theory theory: knownTheories) {
+    		if (theory.getUtility() > 0 && !statesAlreadyCovered.contains(theory.hashCodeOnlyCurrentState())) {
+    			finalTheories.add(theory);
+    		}
+    	}
+    	return finalTheories;
 	}
 
 //	private float evaluateTheory(Theories theories, Theory theory) {
