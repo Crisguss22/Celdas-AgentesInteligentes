@@ -140,7 +140,7 @@ public class Agent extends AbstractPlayer {
 	}
     
     private boolean explore() {
-    	int result = randomGenerator.nextInt(4);
+    	int result = randomGenerator.nextInt(5);
 		return (result > 0);
 	}
     

@@ -166,6 +166,13 @@ public class Theory  implements Comparable<Theory>{
 	public boolean incomplete() {
 		return (currentState==null || action==null || predictedState==null);
 	}
+	public float successRate() {
+		try {
+			return successCount/usedCount;
+		} catch (Exception e) {
+			return 0;
+		}
+	}
 	
 }
 

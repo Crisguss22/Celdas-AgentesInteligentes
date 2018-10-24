@@ -68,7 +68,7 @@ public class Planner {
 			if (modifier > 8) {modifier = 8;}
 		}
 		if (key==lastState) { modifier = modifier * 3;}
-		return Math.round((theory.getUtility()*1000) / modifier);
+		return Math.round((theory.getUtility()*1000*theory.successRate()) / modifier);
 	}
 
 	public Theory planVictory(List<Theory> usefulTheories) {		
